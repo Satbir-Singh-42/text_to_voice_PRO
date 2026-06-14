@@ -4,6 +4,7 @@ Generates speech via gTTS and serves audio to the browser.
 """
 
 from flask import Flask, request, jsonify, send_file, render_template
+from werkzeug.utils import secure_filename
 import hashlib, os, tempfile
 
 app = Flask(__name__)
@@ -112,7 +113,7 @@ def sitemap():
 @app.route("/synthesize", methods=["POST"])
 def synthesize():
     from gtts import gTTS
-    data = request.get_json()
+    data = request.get_json() or {}
     text = (data.get("text") or "").strip()
     lang = data.get("lang", "en")
     tld  = data.get("tld", "com")
@@ -153,9 +154,20 @@ def download(key):
     if not os.path.exists(path):
         return "Not found", 404
     filename = request.args.get("name", "speech.mp3")
+    safe_filename = secure_filename(filename)
+    if not safe_filename:
+        safe_filename = "speech.mp3"
+        
     return send_file(path, mimetype="audio/mpeg",
-                     as_attachment=True, download_name=filename)
+                     as_attachment=True, download_name=safe_filename)
 
+
+@app.after_request
+def add_security_headers(response):
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    return response
 
 if __name__ == "__main__":
     print("Text-to-Voice PRO web server running at http://127.0.0.1:5000")
