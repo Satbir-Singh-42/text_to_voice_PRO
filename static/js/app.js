@@ -30,8 +30,6 @@
   const langList       = $("langList");
   const langItems      = Array.from(langList.querySelectorAll(".lang-item"));
   const selectedBadge  = $("selectedLangBadge");
-  const accentLangCode = $("accentLangCode");
-  const accentTld      = $("accentTld");
   const textInput      = $("textInput");
   const charCount      = $("charCount");
   const speedSlider    = $("speedSlider");
@@ -79,15 +77,13 @@
     item.classList.add("active");
     currentLang = {
       name: item.dataset.name,
-      lang: item.dataset.lang,
-      tld:  item.dataset.tld,
       id:   item.dataset.id,
       slug: item.dataset.slug,
+      male: item.dataset.male,
+      female: item.dataset.female
     };
     // Strip flag emoji from badge for cleaner look
     selectedBadge.textContent  = currentLang.name.replace(/\p{Emoji_Presentation}\s*/gu, "").trim();
-    accentLangCode.textContent = currentLang.lang;
-    accentTld.textContent      = currentLang.tld;
 
     selectedBadge.style.transform = "scale(1.08)";
     setTimeout(() => (selectedBadge.style.transform = ""), 180);
@@ -203,15 +199,16 @@
     showLoader(`Generating speech…`);
     setStatus("loading", `Generating speech…`);
 
+    const gender = document.querySelector('input[name="voiceGender"]:checked').value;
+    const voiceId = currentLang[gender];
+
     try {
       const res = await fetch("/synthesize", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
           text,
-          lang: currentLang.lang,
-          tld:  currentLang.tld,
-          slow: speed.slow,
+          voice: voiceId
         }),
       });
 

@@ -123,9 +123,9 @@
       <ul class="lang-list" id="langList">
         {% for lang in languages %}
         <li class="lang-item {% if loop.first %}active{% endif %}"
-            data-lang="{{ lang.lang }}"
-            data-tld="{{ lang.tld }}"
             data-id="{{ lang.id }}"
+            data-female="{{ lang.female }}"
+            data-male="{{ lang.male }}"
             data-name="{{ lang.name }}"
             data-slug="{{ lang.id }}">
           {{ lang.name }}
@@ -227,21 +227,19 @@
             </div>
           </div>
 
-          <!-- Accent chip -->
-          <div class="control-group accent-info-group">
-            <div class="control-label">Voice Accent</div>
-            <div class="accent-chip">
-              <!-- Globe icon -->
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13"
-                   viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="2" y1="12" x2="22" y2="12"/>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-              </svg>
-              <span id="accentLangCode">hi</span>
-              <span class="accent-dot">·</span>
-              <span id="accentTld">co.in</span>
+          <!-- Voice Gender -->
+          <div class="control-group gender-group">
+            <div class="control-label">Voice Gender</div>
+            <div class="gender-toggle">
+              <input type="radio" name="voiceGender" id="genderFemale" value="female" checked />
+              <label class="gender-label" for="genderFemale">
+                Female
+              </label>
+              
+              <input type="radio" name="voiceGender" id="genderMale" value="male" />
+              <label class="gender-label" for="genderMale">
+                Male
+              </label>
             </div>
           </div>
 
