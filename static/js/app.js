@@ -329,6 +329,13 @@
           if (data.error) throw new Error(data.error);
           
           chunk.audioKey = data.audio_key;
+          
+          // Pre-fetch the actual audio file into local memory for instant zero-latency playback
+          const audioRes = await fetch(`/audio/${chunk.audioKey}`);
+          if (!audioRes.ok) throw new Error("Failed to fetch audio file");
+          const blob = await audioRes.blob();
+          chunk.blobUrl = URL.createObjectURL(blob);
+          
           chunk.status = 'ready';
           
           if (isSpeaking && currentChunkIdx === i && audioEl.paused) {
@@ -378,10 +385,10 @@
         });
       }
 
-      audioEl.src = `/audio/${chunk.audioKey}`;
-      audioEl.playbackRate = SPEED_MAP[currentSpeedIdx].rate;
+      audioEl.src = chunk.blobUrl;
       audioEl.load();
       await audioEl.play();
+      audioEl.playbackRate = SPEED_MAP[currentSpeedIdx].rate;
     } else if (chunk.status === 'error') {
       currentChunkIdx++;
       playCurrentChunk();
@@ -415,6 +422,14 @@
 
     stopRequested = false;
     isSpeaking = true;
+    
+    // Cleanup previous blobs to prevent memory leaks
+    if (textChunks && textChunks.length > 0) {
+      textChunks.forEach(c => {
+        if (c.blobUrl) URL.revokeObjectURL(c.blobUrl);
+      });
+    }
+
     textChunks = chunkText(textInput.value);
 
     // Find the chunk that contains the current cursor position
@@ -494,6 +509,13 @@
 
   /* ── Clear ──────────────────────────────────────────────── */
   clearBtn.addEventListener("click", () => {
+    // Cleanup previous blobs
+    if (textChunks && textChunks.length > 0) {
+      textChunks.forEach(c => {
+        if (c.blobUrl) URL.revokeObjectURL(c.blobUrl);
+      });
+    }
+
     textInput.value = "";
     charCount.textContent = "0 chars";
     handleStop();
