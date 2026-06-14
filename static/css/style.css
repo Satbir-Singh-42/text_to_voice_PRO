@@ -666,6 +666,25 @@ body.light .loader-overlay { background: rgba(240,244,255,0.88); }
 }
 .upi-id-text { font-size: 13px; font-weight: 600; color: var(--text-3); }
 
+/* ── Footer ─────────────────────────────────────────────────── */
+.app-footer {
+  text-align: center;
+  padding: 0 0 20px 0;
+  font-size: 12px;
+  color: var(--text-3);
+  font-weight: 500;
+}
+.app-footer a {
+  color: var(--text-3);
+  text-decoration: none;
+  transition: color var(--transition);
+  margin: 0 4px;
+}
+.app-footer a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 720px) {
   .sidebar {
