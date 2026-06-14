@@ -425,6 +425,35 @@ def download(key):
                      as_attachment=True, download_name=safe_filename)
 
 
+@app.route("/extract-text", methods=["POST"])
+def extract_text():
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+    
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"error": "No file selected"}), 400
+        
+    ext = os.path.splitext(file.filename)[1].lower()
+    text = ""
+    
+    try:
+        if ext == ".pdf":
+            import pypdf
+            reader = pypdf.PdfReader(file)
+            text = "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
+        elif ext == ".docx":
+            from docx import Document
+            doc = Document(file)
+            text = "\n".join([para.text for para in doc.paragraphs])
+        else:
+            return jsonify({"error": "Unsupported file format. Please upload .pdf or .docx"}), 400
+            
+        return jsonify({"text": text.strip()})
+    except Exception as e:
+        return jsonify({"error": f"Failed to extract text: {str(e)}"}), 500
+
+
 @app.after_request
 def add_security_headers(response):
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'

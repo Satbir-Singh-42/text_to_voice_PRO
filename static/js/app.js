@@ -41,6 +41,8 @@
   const speakBtn       = $("speakBtn");
   const stopBtn        = $("stopBtn");
   const downloadBtn    = $("downloadBtn");
+  const uploadBtn      = $("uploadBtn");
+  const fileInput      = $("fileInput");
   const clearBtn       = $("clearBtn");
   const audioEl        = $("audioPlayer");
   const waveform       = $("waveform");
@@ -503,6 +505,61 @@
     downloadBtn.disabled = true;
     setStatus("ready", "Ready — select a language and press Speak");
     textInput.focus();
+  });
+
+  /* ── Upload Document ────────────────────────────────────── */
+  uploadBtn.addEventListener("click", () => {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    
+    // Quick handle for text files directly in browser
+    if (ext === "txt") {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        textInput.value = evt.target.result;
+        textInput.dispatchEvent(new Event("input")); // trigger char count and auto-detect
+        setStatus("done", `Loaded ${file.name}`);
+      };
+      reader.readAsText(file);
+      fileInput.value = ""; // reset
+      return;
+    }
+
+    // For PDF and DOCX, send to backend
+    if (ext === "pdf" || ext === "docx") {
+      showLoader(`Extracting text from ${file.name}…`);
+      setStatus("loading", `Extracting text…`);
+      
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch("/extract-text", {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error || "Failed to extract text");
+        
+        textInput.value = data.text;
+        textInput.dispatchEvent(new Event("input")); // trigger char count and auto-detect
+        setStatus("done", `Extracted text from ${file.name}`);
+      } catch (err) {
+        setStatus("error", err.message);
+      } finally {
+        hideLoader();
+        fileInput.value = ""; // reset
+      }
+    } else {
+      setStatus("error", "Unsupported file type. Please upload .txt, .pdf, or .docx");
+      fileInput.value = ""; // reset
+    }
   });
 
   /* ── Sidebar (mobile) ───────────────────────────────────── */
