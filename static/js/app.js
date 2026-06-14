@@ -55,6 +55,10 @@
   const themeToggle    = $("themeToggle");
   const iconMoon       = $("iconMoon");
   const iconSun        = $("iconSun");
+  
+  const donateBtn      = $("donateBtn");
+  const donateModal    = $("donateModal");
+  const donateClose    = $("donateClose");
 
   /* ── Theme ──────────────────────────────────────────────── */
   function applyTheme(dark) {
@@ -70,6 +74,15 @@
 
   // Restore saved preference
   if (localStorage.getItem("tts-theme") === "light") applyTheme(false);
+
+  /* ── Donate Modal ───────────────────────────────────────── */
+  if (donateBtn && donateModal) {
+    donateBtn.addEventListener("click", () => donateModal.classList.add("visible"));
+    donateClose.addEventListener("click", () => donateModal.classList.remove("visible"));
+    donateModal.addEventListener("click", (e) => {
+      if (e.target === donateModal) donateModal.classList.remove("visible");
+    });
+  }
 
   /* ── Language selection ─────────────────────────────────── */
   function selectLang(item) {

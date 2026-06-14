@@ -617,6 +617,55 @@ body.light .loader-overlay { background: rgba(240,244,255,0.88); }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 6px; }
 
+/* ── Donate Button & Support Modal ──────────────────────────── */
+.btn-donate {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(99,102,241,0.1);
+  color: var(--accent);
+  border: 1px solid rgba(99,102,241,0.2);
+  padding: 8px 14px; border-radius: 10px;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all var(--transition);
+}
+.btn-donate:hover {
+  background: var(--accent); color: white;
+  box-shadow: 0 4px 14px rgba(99,102,241,0.3);
+  transform: translateY(-1px);
+}
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity var(--transition);
+}
+.modal-overlay.visible { opacity: 1; pointer-events: auto; }
+.modal-content {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 32px; border-radius: 20px;
+  width: 90%; max-width: 380px; text-align: center;
+  position: relative; box-shadow: var(--shadow);
+  transform: scale(0.95); transition: transform var(--transition);
+}
+.modal-overlay.visible .modal-content { transform: scale(1); }
+.modal-close {
+  position: absolute; top: 16px; right: 16px;
+  background: transparent; border: none; color: var(--text-3);
+  cursor: pointer; transition: color var(--transition);
+}
+.modal-close:hover { color: var(--text); }
+.modal-title { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+.modal-desc { font-size: 14px; color: var(--text-2); margin-bottom: 20px; line-height: 1.5; }
+.qr-container {
+  background: white; padding: 12px; border-radius: 16px;
+  margin-bottom: 16px; display: inline-block;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+.qr-container img {
+  display: block; width: 200px; height: 200px; object-fit: contain;
+}
+.upi-id-text { font-size: 13px; font-weight: 600; color: var(--text-3); }
+
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 720px) {
   .sidebar {
