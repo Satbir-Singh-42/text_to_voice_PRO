@@ -138,6 +138,53 @@
 
   langItems.forEach(item => item.addEventListener("click", () => selectLang(item)));
 
+  /* ── Auto-Detect Language ───────────────────────────────── */
+  function detectLanguage(text) {
+    if (!text) return null;
+    const scripts = [
+      { id: 'hi-in', regex: /[\u0900-\u097F]/g }, // Hindi
+      { id: 'pa-in', regex: /[\u0A00-\u0A7F]/g }, // Punjabi
+      { id: 'bn-in', regex: /[\u0980-\u09FF]/g }, // Bengali
+      { id: 'gu-in', regex: /[\u0A80-\u0AFF]/g }, // Gujarati
+      { id: 'ta-in', regex: /[\u0B80-\u0BFF]/g }, // Tamil
+      { id: 'te-in', regex: /[\u0C00-\u0C7F]/g }, // Telugu
+      { id: 'kn-in', regex: /[\u0C80-\u0CFF]/g }, // Kannada
+      { id: 'ml-in', regex: /[\u0D00-\u0D7F]/g }, // Malayalam
+      { id: 'ja-jp', regex: /[\u3040-\u309F\u30A0-\u30FF]/g }, // Japanese
+      { id: 'ko-kr', regex: /[\uAC00-\uD7A3]/g }, // Korean
+      { id: 'zh-cn', regex: /[\u4E00-\u9FAF]/g }, // Chinese
+      { id: 'ru-ru', regex: /[\u0400-\u04FF]/g }, // Russian
+      { id: 'ar-sa', regex: /[\u0600-\u06FF]/g }, // Arabic
+      { id: 'th-th', regex: /[\u0E00-\u0E7F]/g }, // Thai
+      { id: 'he-il', regex: /[\u0590-\u05FF]/g }, // Hebrew
+      { id: 'el-gr', regex: /[\u0370-\u03FF]/g }, // Greek
+    ];
+
+    let bestMatch = null;
+    let maxCount = 5; // Require at least 5 chars to auto-switch
+
+    for (const script of scripts) {
+      const matches = text.match(script.regex);
+      if (matches && matches.length > maxCount) {
+        maxCount = matches.length;
+        bestMatch = script.id;
+      }
+    }
+
+    if (!bestMatch) {
+      // If no distinct script found, check if it's mostly Latin but current lang is non-Latin
+      const latinMatches = text.match(/[a-zA-Z]/g);
+      if (latinMatches && latinMatches.length > 5) {
+        const isCurrentlyLatin = !scripts.some(s => s.id === currentLang.id);
+        if (!isCurrentlyLatin) {
+          // Switch back to English (India) as a safe default for Latin text
+          return 'en-in'; 
+        }
+      }
+    }
+    return bestMatch;
+  }
+
   /* ── Language search ────────────────────────────────────── */
   langSearch.addEventListener("input", () => {
     const q = langSearch.value.toLowerCase().trim();
@@ -157,10 +204,23 @@
   speedSlider.addEventListener("input", () => setSpeed(Number(speedSlider.value)));
   speedLabels.forEach((el, i) => el.addEventListener("click", () => setSpeed(i)));
 
-  /* ── Char counter ───────────────────────────────────────── */
+  /* ── Char counter & Auto-Detect ─────────────────────────── */
+  let detectTimeout;
   textInput.addEventListener("input", () => {
     const len = textInput.value.length;
     charCount.textContent = `${len.toLocaleString()} chars`;
+
+    clearTimeout(detectTimeout);
+    detectTimeout = setTimeout(() => {
+      const detectedId = detectLanguage(textInput.value);
+      if (detectedId && detectedId !== currentLang.id) {
+        const item = langItems.find(i => i.dataset.id === detectedId);
+        if (item) {
+          selectLang(item);
+          setStatus("ready", `Auto-detected language: ${item.dataset.name}`);
+        }
+      }
+    }, 500); // 500ms debounce
   });
 
   /* ── Status ─────────────────────────────────────────────── */
