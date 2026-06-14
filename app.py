@@ -317,8 +317,8 @@ def index():
 @app.route("/favicon.ico")
 def favicon():
     return send_file(
-        os.path.join(app.root_path, "static", "icons", "favicon-32x32.png"),
-        mimetype="image/png"
+        os.path.join(app.root_path, "static", "favicon.ico"),
+        mimetype="image/vnd.microsoft.icon"
     )
 
 
