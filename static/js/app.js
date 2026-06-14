@@ -432,10 +432,13 @@
 
     textChunks = chunkText(textInput.value);
 
-    // Find the chunk that contains the current cursor position
-    const cursor = textInput.selectionStart;
-    currentChunkIdx = textChunks.findIndex(c => cursor >= c.start && cursor <= c.end);
-    if (currentChunkIdx === -1) currentChunkIdx = 0; // Fallback to start
+    // Only start from the middle if the user has explicitly highlighted text
+    currentChunkIdx = 0;
+    if (textInput.selectionStart !== textInput.selectionEnd) {
+      const cursor = textInput.selectionStart;
+      currentChunkIdx = textChunks.findIndex(c => cursor >= c.start && cursor <= c.end);
+      if (currentChunkIdx === -1) currentChunkIdx = 0;
+    }
 
     audioEl.pause();
     audioEl.currentTime = 0;
