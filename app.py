@@ -19,6 +19,12 @@ LANGUAGES = [
         "male": "hi-IN-MadhurNeural"
     },
     {
+        "name": "🇮🇳 Punjabi",
+        "id": "pa-in",
+        "female": "gtts-pa",
+        "male": "gtts-pa"
+    },
+    {
         "name": "🇮🇳 English – India",
         "id": "en-in",
         "female": "en-IN-NeerjaExpressiveNeural",
@@ -378,8 +384,14 @@ def synthesize():
 
     if not os.path.exists(cache_path):
         try:
-            communicate = edge_tts.Communicate(text, voice)
-            asyncio.run(communicate.save(cache_path))
+            if voice.startswith("gtts-"):
+                from gtts import gTTS
+                lang = voice.split("-")[1]
+                tts = gTTS(text=text, lang=lang)
+                tts.save(cache_path)
+            else:
+                communicate = edge_tts.Communicate(text, voice)
+                asyncio.run(communicate.save(cache_path))
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
