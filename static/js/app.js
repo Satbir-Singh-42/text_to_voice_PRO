@@ -248,11 +248,11 @@
     return chunks;
   }
 
-  async function prefetchChunks() {
+  async function prefetchChunks(startIdx = 0) {
     const gender = document.querySelector('input[name="voiceGender"]:checked').value;
     const voiceId = currentLang[gender];
 
-    for (let i = 0; i < textChunks.length; i++) {
+    for (let i = startIdx; i < textChunks.length; i++) {
       if (stopRequested) return;
       const chunk = textChunks[i];
       if (chunk.status === 'pending') {
@@ -293,6 +293,29 @@
       textInput.focus();
       hideLoader();
       
+      // Setup Media Session for background playback
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: chunk.text.length > 40 ? chunk.text.substring(0, 40) + '...' : chunk.text,
+          artist: 'Text to Voice PRO - ' + selectedBadge.textContent,
+        });
+        navigator.mediaSession.setActionHandler('play', () => audioEl.play());
+        navigator.mediaSession.setActionHandler('pause', () => audioEl.pause());
+        navigator.mediaSession.setActionHandler('stop', () => handleStop());
+        navigator.mediaSession.setActionHandler('nexttrack', () => {
+          if (currentChunkIdx + 1 < textChunks.length) {
+            currentChunkIdx++;
+            playCurrentChunk();
+          }
+        });
+        navigator.mediaSession.setActionHandler('previoustrack', () => {
+          if (currentChunkIdx - 1 >= 0) {
+            currentChunkIdx--;
+            playCurrentChunk();
+          }
+        });
+      }
+
       audioEl.src = `/audio/${chunk.audioKey}`;
       audioEl.playbackRate = SPEED_MAP[currentSpeedIdx].rate;
       audioEl.load();
@@ -331,7 +354,11 @@
     stopRequested = false;
     isSpeaking = true;
     textChunks = chunkText(textInput.value);
-    currentChunkIdx = 0;
+
+    // Find the chunk that contains the current cursor position
+    const cursor = textInput.selectionStart;
+    currentChunkIdx = textChunks.findIndex(c => cursor >= c.start && cursor <= c.end);
+    if (currentChunkIdx === -1) currentChunkIdx = 0; // Fallback to start
 
     audioEl.pause();
     audioEl.currentTime = 0;
@@ -344,7 +371,7 @@
     showLoader(`Preparing speech…`);
     setStatus("loading", `Preparing speech…`);
 
-    prefetchChunks();
+    prefetchChunks(currentChunkIdx);
   });
 
   /* ── Stop ───────────────────────────────────────────────── */
