@@ -103,7 +103,7 @@
 
   /* ── Speed slider ───────────────────────────────────────── */
   function setSpeed(idx) {
-    currentSpeedIdx = Math.max(0, Math.min(2, idx));
+    currentSpeedIdx = Math.max(0, Math.min(SPEED_MAP.length - 1, idx));
     speedSlider.value = currentSpeedIdx;
     speedLabels.forEach((el, i) => el.classList.toggle("active", i === currentSpeedIdx));
     if (audioEl.src) audioEl.playbackRate = SPEED_MAP[currentSpeedIdx].rate;
