@@ -22,7 +22,7 @@ LANGUAGES = [
         "name": "🇮🇳 Punjabi",
         "id": "pa-in",
         "female": "gtts-pa",
-        "male": "gtts-pa"
+        "male": ""
     },
     {
         "name": "🇮🇳 English – India",

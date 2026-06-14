@@ -19,9 +19,13 @@
   /* ── State ──────────────────────────────────────────────── */
   let currentLang     = window.LANGUAGES[0];
   let currentSpeedIdx = 0;
-  let currentAudioKey = null;
   let isDragging      = false;
   let isDark          = true;
+
+  let textChunks      = [];
+  let currentChunkIdx = -1;
+  let isSpeaking      = false;
+  let stopRequested   = false;
 
   /* ── DOM helpers ────────────────────────────────────────── */
   const $ = id => document.getElementById(id);
@@ -59,6 +63,11 @@
   const donateBtn      = $("donateBtn");
   const donateModal    = $("donateModal");
   const donateClose    = $("donateClose");
+
+  const genderFemale    = $("genderFemale");
+  const genderMale      = $("genderMale");
+  const genderFemaleLbl = document.querySelector('label[for="genderFemale"]');
+  const genderMaleLbl   = document.querySelector('label[for="genderMale"]');
 
   /* ── Theme ──────────────────────────────────────────────── */
   function applyTheme(dark) {
@@ -100,6 +109,29 @@
 
     selectedBadge.style.transform = "scale(1.08)";
     setTimeout(() => (selectedBadge.style.transform = ""), 180);
+
+    // Disable unavailable genders
+    if (!currentLang.female || currentLang.female === "None") {
+      genderFemale.disabled = true;
+      genderFemaleLbl.style.opacity = "0.4";
+      genderFemaleLbl.style.cursor = "not-allowed";
+      if (genderFemale.checked) genderMale.checked = true;
+    } else {
+      genderFemale.disabled = false;
+      genderFemaleLbl.style.opacity = "1";
+      genderFemaleLbl.style.cursor = "pointer";
+    }
+
+    if (!currentLang.male || currentLang.male === "None") {
+      genderMale.disabled = true;
+      genderMaleLbl.style.opacity = "0.4";
+      genderMaleLbl.style.cursor = "not-allowed";
+      if (genderMale.checked) genderFemale.checked = true;
+    } else {
+      genderMale.disabled = false;
+      genderMaleLbl.style.opacity = "1";
+      genderMaleLbl.style.cursor = "pointer";
+    }
 
     if (window.innerWidth <= 720) sidebar.classList.remove("open");
   }
@@ -170,10 +202,15 @@
   });
   audioEl.addEventListener("pause", () => waveform.classList.remove("playing"));
   audioEl.addEventListener("ended", () => {
-    waveform.classList.remove("playing");
-    setStatus("done", "Done — audio finished");
-    speakBtn.disabled = false;
-    stopBtn.disabled  = true;
+    if (!stopRequested && isSpeaking) {
+      currentChunkIdx++;
+      playCurrentChunk();
+    } else {
+      waveform.classList.remove("playing");
+      setStatus("done", "Done — audio finished");
+      speakBtn.disabled = false;
+      stopBtn.disabled  = true;
+    }
   });
 
   /* ── Scrub bar ──────────────────────────────────────────── */
@@ -190,6 +227,98 @@
   document.addEventListener("mousemove",   e => { if (isDragging) scrubTo(e); });
   document.addEventListener("mouseup",     ()  => { isDragging = false; });
 
+  /* ── Chunking & Pre-fetching Logic ─────────────────────── */
+  function chunkText(text) {
+    const chunks = [];
+    let start = 0;
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      const isPunc = (char === '.' || char === '?' || char === '!' || char === '\n');
+      if (isPunc || i === text.length - 1) {
+        while (i + 1 < text.length && (text[i + 1] === '.' || text[i + 1] === '?' || text[i + 1] === '!' || text[i + 1] === '\n')) {
+          i++;
+        }
+        const chunkStr = text.substring(start, i + 1);
+        if (chunkStr.trim().length > 0) {
+          chunks.push({ text: chunkStr.trim(), start: start, end: i + 1, audioKey: null, status: 'pending' });
+        }
+        start = i + 1;
+      }
+    }
+    return chunks;
+  }
+
+  async function prefetchChunks() {
+    const gender = document.querySelector('input[name="voiceGender"]:checked').value;
+    const voiceId = currentLang[gender];
+
+    for (let i = 0; i < textChunks.length; i++) {
+      if (stopRequested) return;
+      const chunk = textChunks[i];
+      if (chunk.status === 'pending') {
+        chunk.status = 'fetching';
+        try {
+          const res = await fetch("/synthesize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: chunk.text, voice: voiceId })
+          });
+          const data = await res.json();
+          if (data.error) throw new Error(data.error);
+          
+          chunk.audioKey = data.audio_key;
+          chunk.status = 'ready';
+          
+          if (isSpeaking && currentChunkIdx === i && audioEl.paused) {
+            playCurrentChunk();
+          }
+        } catch (err) {
+          chunk.status = 'error';
+          setStatus("error", "Error loading chunk");
+        }
+      }
+    }
+  }
+
+  async function playCurrentChunk() {
+    if (stopRequested) return;
+    if (currentChunkIdx >= textChunks.length) {
+      handleStop();
+      return;
+    }
+    
+    const chunk = textChunks[currentChunkIdx];
+    if (chunk.status === 'ready') {
+      textInput.setSelectionRange(chunk.start, chunk.end);
+      textInput.focus();
+      hideLoader();
+      
+      audioEl.src = `/audio/${chunk.audioKey}`;
+      audioEl.playbackRate = SPEED_MAP[currentSpeedIdx].rate;
+      audioEl.load();
+      await audioEl.play();
+    } else if (chunk.status === 'error') {
+      currentChunkIdx++;
+      playCurrentChunk();
+    } else {
+      showLoader("Buffering next part...");
+      setStatus("loading", "Buffering...");
+    }
+  }
+
+  function handleStop() {
+    stopRequested = true;
+    isSpeaking = false;
+    audioEl.pause();
+    audioEl.currentTime = 0;
+    waveform.classList.remove("playing");
+    setStatus("ready", "Stopped");
+    speakBtn.disabled = false;
+    stopBtn.disabled = true;
+    hideLoader();
+    textInput.setSelectionRange(0, 0);
+  }
+
   /* ── Speak ──────────────────────────────────────────────── */
   speakBtn.addEventListener("click", async () => {
     const text = textInput.value.trim();
@@ -199,118 +328,92 @@
       return;
     }
 
-    // Reset player
+    stopRequested = false;
+    isSpeaking = true;
+    textChunks = chunkText(textInput.value);
+    currentChunkIdx = 0;
+
     audioEl.pause();
     audioEl.currentTime = 0;
     waveform.classList.remove("playing");
-    speakBtn.disabled    = true;
-    stopBtn.disabled     = false;
-    downloadBtn.disabled = true;
+    speakBtn.disabled = true;
+    stopBtn.disabled = false;
+    downloadBtn.disabled = false;
     progressWrap.classList.remove("visible");
 
-    const speed = SPEED_MAP[currentSpeedIdx];
-    showLoader(`Generating speech…`);
-    setStatus("loading", `Generating speech…`);
+    showLoader(`Preparing speech…`);
+    setStatus("loading", `Preparing speech…`);
+
+    prefetchChunks();
+  });
+
+  /* ── Stop ───────────────────────────────────────────────── */
+  stopBtn.addEventListener("click", () => {
+    handleStop();
+    audioFill.style.width   = "0%";
+    audioThumb.style.left   = "0%";
+    timeCurrent.textContent = "0:00";
+  });
+
+  /* ── Download (Full MP3) ────────────────────────────────── */
+  downloadBtn.addEventListener("click", async () => {
+    const text = textInput.value.trim();
+    if (!text) return;
+
+    const langSlug = (currentLang.slug || currentLang.id || "speech")
+      .replace(/[^a-z0-9_-]/gi, "_")
+      .slice(0, 30);
+    const filename = `speech_${langSlug}.mp3`;
+
+    setStatus("loading", `Generating full MP3…`);
+    downloadBtn.disabled = true;
+    showLoader("Generating full MP3 for download...");
 
     const gender = document.querySelector('input[name="voiceGender"]:checked').value;
     const voiceId = currentLang[gender];
 
     try {
       const res = await fetch("/synthesize", {
-        method:  "POST",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({
-          text,
-          voice: voiceId
-        }),
+        body: JSON.stringify({ text, voice: voiceId })
       });
-
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || "Server error");
 
-      currentAudioKey = data.audio_key;
-      hideLoader();
-
-      audioEl.src          = `/audio/${currentAudioKey}`;
-      audioEl.playbackRate = speed.rate;
-      audioEl.load();
-      await audioEl.play();
-      downloadBtn.disabled = false;
-
-    } catch (err) {
-      hideLoader();
-      setStatus("error", `Error: ${err.message}`);
-      speakBtn.disabled = false;
-      stopBtn.disabled  = true;
-    }
-  });
-
-  /* ── Stop ───────────────────────────────────────────────── */
-  stopBtn.addEventListener("click", () => {
-    audioEl.pause();
-    audioEl.currentTime = 0;
-    waveform.classList.remove("playing");
-    setStatus("ready", "Stopped");
-    speakBtn.disabled = false;
-    stopBtn.disabled  = true;
-    audioFill.style.width   = "0%";
-    audioThumb.style.left   = "0%";
-    timeCurrent.textContent = "0:00";
-  });
-
-  /* ── Download (fixed) ───────────────────────────────────── */
-  downloadBtn.addEventListener("click", async () => {
-    if (!currentAudioKey) return;
-
-    // Build a safe ASCII filename from the language name
-    const langSlug = (currentLang.slug || currentLang.id || "speech")
-      .replace(/[^a-z0-9_-]/gi, "_")
-      .slice(0, 30);
-    const filename = `speech_${langSlug}.mp3`;
-
-    setStatus("loading", `Preparing download…`);
-    downloadBtn.disabled = true;
-
-    try {
-      // Fetch the audio blob directly — most reliable cross-browser download method
-      const res = await fetch(`/audio/${currentAudioKey}`);
-      if (!res.ok) throw new Error(`Server returned ${res.status}`);
-      const blob = await res.blob();
-      const url  = URL.createObjectURL(blob);
+      const audioRes = await fetch(`/audio/${data.audio_key}`);
+      if (!audioRes.ok) throw new Error(`Server returned ${audioRes.status}`);
+      const blob = await audioRes.blob();
+      const url = URL.createObjectURL(blob);
 
       const a = document.createElement("a");
-      a.href     = url;
+      a.href = url;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
 
-      // Revoke object URL after a short delay
       setTimeout(() => URL.revokeObjectURL(url), 10000);
-
       setStatus("done", `Downloaded ${filename}`);
     } catch (err) {
       setStatus("error", `Download failed: ${err.message}`);
     } finally {
       downloadBtn.disabled = false;
+      hideLoader();
     }
   });
 
   /* ── Clear ──────────────────────────────────────────────── */
   clearBtn.addEventListener("click", () => {
-    textInput.value        = "";
-    charCount.textContent  = "0 chars";
-    audioEl.pause();
+    textInput.value = "";
+    charCount.textContent = "0 chars";
+    handleStop();
     audioEl.src = "";
-    waveform.classList.remove("playing");
     progressWrap.classList.remove("visible");
-    audioFill.style.width    = "0%";
-    timeCurrent.textContent  = "0:00";
+    audioFill.style.width = "0%";
+    timeCurrent.textContent = "0:00";
     timeDuration.textContent = "0:00";
-    speakBtn.disabled    = false;
-    stopBtn.disabled     = true;
     downloadBtn.disabled = true;
-    currentAudioKey      = null;
     setStatus("ready", "Ready — select a language and press Speak");
     textInput.focus();
   });
