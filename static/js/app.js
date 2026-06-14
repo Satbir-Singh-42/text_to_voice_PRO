@@ -9,14 +9,16 @@
      gTTS only natively supports slow=True/False.
      For "Fast" we apply AudioContext playbackRate = 1.35×      */
   const SPEED_MAP = [
-    { label: "Slow",   slow: true,  rate: 0.85 },
-    { label: "Normal", slow: false, rate: 1.0  },
-    { label: "Fast",   slow: false, rate: 1.35 },
+    { label: "1X",    slow: false, rate: 1.0  },
+    { label: "1.2X",  slow: false, rate: 1.2  },
+    { label: "1.5X",  slow: false, rate: 1.5  },
+    { label: "1.75X", slow: false, rate: 1.75 },
+    { label: "2X",    slow: false, rate: 2.0  },
   ];
 
   /* ── State ──────────────────────────────────────────────── */
   let currentLang     = window.LANGUAGES[0];
-  let currentSpeedIdx = 1;
+  let currentSpeedIdx = 0;
   let currentAudioKey = null;
   let isDragging      = false;
   let isDark          = true;
@@ -169,7 +171,7 @@
   function scrubTo(e) {
     const rect = audioTrack.getBoundingClientRect();
     const pct  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    if (audioEl.duration) {
+    if (audioEl.duration && isFinite(audioEl.duration)) {
       audioEl.currentTime   = pct * audioEl.duration;
       audioFill.style.width = `${pct * 100}%`;
       audioThumb.style.left = `${pct * 100}%`;
@@ -339,7 +341,7 @@
 
   /* ── Init ───────────────────────────────────────────────── */
   selectLang(langItems[0]);
-  setSpeed(1);
+  setSpeed(0);
   setStatus("ready", "Ready — select a language and press Speak");
   textInput.focus();
 

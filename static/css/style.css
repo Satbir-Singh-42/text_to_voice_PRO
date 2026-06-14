@@ -319,7 +319,7 @@ textarea::placeholder { color: var(--text-3); }
 input[type="range"].speed-range {
   -webkit-appearance: none;
   appearance: none;
-  width: 160px; height: 5px;
+  width: 220px; height: 5px;
   border-radius: 5px;
   background: var(--border-hi);
   outline: none;
@@ -345,7 +345,7 @@ input[type="range"].speed-range::-moz-range-thumb {
 }
 .speed-labels {
   display: flex; justify-content: space-between;
-  width: 160px; padding: 0 2px;
+  width: 220px; padding: 0 2px;
 }
 .speed-label-item {
   font-size: 10px; font-weight: 600;
@@ -472,6 +472,10 @@ body.light .player-section { background: rgba(99,102,241,0.03); }
   background: var(--surface2); border-radius: 4px;
   position: relative; cursor: pointer;
   transition: height var(--transition);
+  /* Increase hit area for easier scrubbing */
+  background-clip: content-box;
+  padding: 8px 0;
+  margin: -8px 0;
 }
 .audio-track:hover { height: 6px; }
 .audio-fill {
