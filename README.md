@@ -7,30 +7,30 @@
 
 ---
 
-## ✨ Features
+## Features
 
 | Feature | Detail |
 |---------|--------|
-| 🌍 **50+ Languages** | Hindi, Punjabi, English (7 accents), Arabic, Spanish, Japanese, Korean, and many more |
-| 🎚️ **Speed Control** | Draggable slider — Slow / Normal / Fast |
-| 🎵 **In-browser Playback** | Scrubable audio progress bar with waveform animation |
-| 💾 **Save as MP3** | Download the generated audio file directly |
-| 🌙 **Light / Dark Theme** | Toggle with preference saved in localStorage |
-| 🔍 **Language Search** | Instant filter in the sidebar |
-| ⌨️ **Keyboard Shortcut** | `Ctrl + Enter` to speak |
-| ♾️ **No Character Limit** | Paste as much text as you want |
-| 📱 **Responsive** | Works on desktop, tablet, and mobile |
-| 🚀 **Vercel Ready** | One-click deployment via `vercel.json` |
+|  **50+ Languages** | Hindi, Punjabi, English (7 accents), Arabic, Spanish, Japanese, Korean, and many more |
+|  **Speed Control** | Draggable slider — Slow / Normal / Fast |
+|  **In-browser Playback** | Scrubable audio progress bar with waveform animation |
+|  **Save as MP3** | Download the generated audio file directly |
+|  **Light / Dark Theme** | Toggle with preference saved in localStorage |
+|  **Language Search** | Instant filter in the sidebar |
+|  **Keyboard Shortcut** | `Ctrl + Enter` to speak |
+|  **No Character Limit** | Paste as much text as you want |
+|  **Responsive** | Works on desktop, tablet, and mobile |
+|  **Vercel Ready** | One-click deployment via `vercel.json` |
 
 ---
 
-## 🖥️ Screenshots
+##  Screenshots
 
 > Run locally and open `http://127.0.0.1:5000` to see the app.
 
 ---
 
-## 🗂️ Project Structure
+##  Project Structure
 
 ```
 text_to_voice_PRO/
@@ -61,7 +61,7 @@ text_to_voice_PRO/
 
 ---
 
-## ⚡ Quick Start (Local)
+##  Quick Start (Local)
 
 ### 1. Prerequisites
 - Python 3.9+ installed
@@ -88,7 +88,7 @@ http://127.0.0.1:5000
 
 ---
 
-## 🚀 Deploy to Vercel
+##  Deploy to Vercel
 
 See the full guide in [DEPLOY.md](DEPLOY.md).
 
@@ -111,7 +111,7 @@ Every `git push` after that triggers an automatic re-deploy.
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
@@ -124,7 +124,7 @@ Every `git push` after that triggers an automatic re-deploy.
 
 ---
 
-## 🌐 API Endpoints
+##  API Endpoints
 
 | Method | Route | Description |
 |--------|-------|-------------|
@@ -149,7 +149,7 @@ Every `git push` after that triggers an automatic re-deploy.
 
 ---
 
-## ⌨️ Keyboard Shortcuts
+##  Keyboard Shortcuts
 
 | Shortcut | Action |
 |----------|--------|
@@ -157,13 +157,13 @@ Every `git push` after that triggers an automatic re-deploy.
 
 ---
 
-## 🌍 Supported Languages (50+)
+##  Supported Languages (50+)
 
 Hindi · Punjabi · English (India, British, American, Australia, Canada, Ireland, N.Zealand, S.Africa, Nigeria) · Urdu · Arabic (Standard + Egypt) · French · Spanish (Spain, Mexico, Argentina, Colombia) · German · Chinese (Mandarin) · Japanese · Korean · Portuguese (BR + PT) · Italian · Russian · Dutch · Swedish · Norwegian · Danish · Finnish · Polish · Czech · Romanian · Hungarian · Greek · Turkish · Vietnamese · Thai · Indonesian · Filipino · Malay · Tamil · Telugu · Kannada · Malayalam · Bengali · Gujarati · Marathi · Hebrew · Ukrainian
 
 ---
 
-## 📋 Requirements
+##  Requirements
 
 ```
 flask>=3.0.0
@@ -172,13 +172,13 @@ gtts>=2.5.0
 
 ---
 
-## 📄 License
+##  License
 
 MIT License — free to use, modify, and distribute.
 
 ---
 
-## 🙏 Credits
+##  Credits
 
 - **gTTS** by [Pierre Nicolas Durette](https://github.com/pndurette/gTTS)
 - **Inter font** by Rasmus Andersson
